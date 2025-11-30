@@ -16,7 +16,8 @@ A Chrome browser extension for analyzing GitHub repository information.
 
 1. **Download or clone this project**
    ```bash
-   cd /Users/hongmanyi/git_repo_chrome
+   git clone https://github.com/MANYI-anewbird/Sunnysett-Hub.git
+   cd Sunnysett-Hub
    ```
 
 2. **Prepare icon files**
@@ -31,7 +32,7 @@ A Chrome browser extension for analyzing GitHub repository information.
    - Navigate to `chrome://extensions/`
    - Enable "Developer mode" in the top right corner
    - Click "Load unpacked"
-   - Select the project directory `/Users/hongmanyi/git_repo_chrome`
+   - Select the project directory
 
 ## Usage
 
@@ -42,7 +43,7 @@ A Chrome browser extension for analyzing GitHub repository information.
 ## Project Structure
 
 ```
-git_repo_chrome/
+Sunnysett-Hub/
 ├── manifest.json      # Chrome extension configuration file
 ├── popup.html         # Popup interface
 ├── popup.js           # Popup logic
@@ -96,4 +97,3 @@ To modify or extend functionality:
 ## License
 
 MIT License
-

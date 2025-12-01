@@ -3,93 +3,134 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GitHub Repo Analyzer</title>
+  <title>Sunnysett Hub - AI Repo Analyzer</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <div class="container">
     <header>
-      <h1>📊 GitHub Repository Analysis</h1>
+      <h1>🚀 Sunnysett Hub</h1>
+      <p class="subtitle">AI-Powered Repository Analysis</p>
     </header>
     
     <div id="loading" class="loading">
       <div class="spinner"></div>
-      <p>Analyzing repository information...</p>
+      <p>Analyzing repository...</p>
+      <p class="loading-detail">This may take 10-20 seconds</p>
     </div>
 
     <div id="error" class="error" style="display: none;">
-      <p>❌ Unable to fetch repository information</p>
-      <p class="error-message">Please make sure you are on a GitHub repository page</p>
+      <p class="error-icon">❌</p>
+      <p class="error-title">Unable to analyze repository</p>
+      <p class="error-message"></p>
+      <button id="settings-btn" class="btn-settings">⚙️ Open Settings</button>
     </div>
 
     <div id="content" class="content" style="display: none;">
-      <div class="repo-header">
-        <h2 id="repo-name" class="repo-name"></h2>
-        <p id="repo-description" class="repo-description"></p>
+      <!-- Settings Warning -->
+      <div id="settings-warning" class="settings-warning" style="display: none;">
+        <p>⚠️ API keys not configured</p>
+        <button id="settings-btn-inline" class="btn-settings-small">Configure</button>
       </div>
 
-      <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-icon">⭐</div>
-          <div class="stat-value" id="stars">-</div>
-          <div class="stat-label">Stars</div>
+      <!-- Feature 1: AI Repo Summary -->
+      <section class="feature-section">
+        <div class="feature-header">
+          <h2>📋 Repository Summary</h2>
         </div>
-        <div class="stat-card">
-          <div class="stat-icon">🍴</div>
-          <div class="stat-value" id="forks">-</div>
-          <div class="stat-label">Forks</div>
+        <div class="feature-content">
+          <p id="repo-summary" class="summary-text">-</p>
         </div>
-        <div class="stat-card">
-          <div class="stat-icon">👀</div>
-          <div class="stat-value" id="watching">-</div>
-          <div class="stat-label">Watching</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-icon">💬</div>
-          <div class="stat-value" id="issues">-</div>
-          <div class="stat-label">Issues</div>
-        </div>
-      </div>
+      </section>
 
-      <div class="info-section">
-        <div class="info-item">
-          <span class="info-label">👤 Owner:</span>
-          <span class="info-value" id="owner">-</span>
+      <!-- Feature 2: Key File Highlighter -->
+      <section class="feature-section">
+        <div class="feature-header">
+          <h2>🔑 Key Files</h2>
         </div>
-        <div class="info-item">
-          <span class="info-label">💻 Language:</span>
-          <span class="info-value" id="language">-</span>
+        <div class="feature-content">
+          <div id="key-files" class="key-files-list">
+            <p class="empty-state">Analyzing key files...</p>
+          </div>
         </div>
-        <div class="info-item">
-          <span class="info-label">📄 License:</span>
-          <span class="info-value" id="license">-</span>
-        </div>
-        <div class="info-item">
-          <span class="info-label">📝 README:</span>
-          <span class="info-value" id="readme">-</span>
-        </div>
-        <div class="info-item">
-          <span class="info-label">🔄 Pull Requests:</span>
-          <span class="info-value" id="pull-requests">-</span>
-        </div>
-        <div class="info-item">
-          <span class="info-label">🕐 Last Commit:</span>
-          <span class="info-value" id="last-commit">-</span>
-        </div>
-      </div>
+      </section>
 
-      <div class="topics-section" id="topics-section" style="display: none;">
-        <div class="info-label">🏷️ Topics:</div>
-        <div class="topics-container" id="topics-container"></div>
+      <!-- Feature 3: Architecture / Pipeline Explanation -->
+      <section class="feature-section">
+        <div class="feature-header">
+          <h2>🏗️ Architecture & Pipeline</h2>
+        </div>
+        <div class="feature-content">
+          <p id="pipeline-explanation" class="pipeline-text">-</p>
+        </div>
+      </section>
+
+      <!-- Feature 4: Smart Use-Case Recommendations -->
+      <section class="feature-section">
+        <div class="feature-header">
+          <h2>💡 Use Cases</h2>
+        </div>
+        <div class="feature-content">
+          <ul id="use-cases" class="use-cases-list">
+            <li class="empty-state">Analyzing use cases...</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- Feature 5: Dependency & Environment Auditor -->
+      <section class="feature-section">
+        <div class="feature-header">
+          <h2>📦 Dependencies & Environment</h2>
+        </div>
+        <div class="feature-content">
+          <div id="requirements" class="requirements-content">
+            <div class="empty-state">Analyzing dependencies...</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Feature 6: Repo Health Check -->
+      <section class="feature-section">
+        <div class="feature-header">
+          <h2>🏥 Repository Health</h2>
+        </div>
+        <div class="feature-content">
+          <div id="health-check" class="health-content">
+            <div class="empty-state">Analyzing health...</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Metadata Footer -->
+      <div class="metadata-footer">
+        <div class="metadata-item">
+          <span class="metadata-label">⭐ Stars:</span>
+          <span id="meta-stars" class="metadata-value">-</span>
+        </div>
+        <div class="metadata-item">
+          <span class="metadata-label">🍴 Forks:</span>
+          <span id="meta-forks" class="metadata-value">-</span>
+        </div>
+        <div class="metadata-item">
+          <span class="metadata-label">💻 Language:</span>
+          <span id="meta-language" class="metadata-value">-</span>
+        </div>
+        <div class="metadata-item">
+          <span class="metadata-label">📄 License:</span>
+          <span id="meta-license" class="metadata-value">-</span>
+        </div>
       </div>
 
       <div class="actions">
-        <a id="repo-link" href="#" target="_blank" class="btn-primary">View Repository</a>
+        <a id="repo-link" href="#" target="_blank" class="btn-primary">🔗 View on GitHub</a>
+        <a href="https://sunnysett.com/github" target="_blank" class="btn-website">🌐 Sunnysett Hub</a>
+        <button id="settings-btn-footer" class="btn-secondary">⚙️ Settings</button>
       </div>
     </div>
   </div>
 
+  <script src="api.js"></script>
+  <script src="analyzer.js"></script>
   <script src="popup.js"></script>
 </body>
 </html>
-

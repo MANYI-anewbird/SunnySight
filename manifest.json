@@ -1,13 +1,16 @@
 {
   "manifest_version": 3,
-  "name": "GitHub Repo Analyzer",
-  "version": "1.0.0",
-  "description": "A Chrome extension for analyzing GitHub repository information",
+  "name": "Sunnysett Hub - AI Repo Analyzer",
+  "version": "2.0.0",
+  "description": "AI-powered GitHub repository analyzer with technical insights and pain point detection",
   "permissions": [
-    "activeTab"
+    "activeTab",
+    "storage"
   ],
   "host_permissions": [
-    "https://github.com/*"
+    "https://github.com/*",
+    "https://api.github.com/*",
+    "https://api.openai.com/*"
   ],
   "action": {
     "default_popup": "popup.html",
@@ -28,6 +31,7 @@
     "16": "icons/icon16.png",
     "48": "icons/icon48.png",
     "128": "icons/icon128.png"
-  }
+  },
+  "options_page": "settings.html"
 }
 

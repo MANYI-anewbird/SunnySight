@@ -6,8 +6,9 @@
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  width: 400px;
-  min-height: 500px;
+  width: 500px;
+  max-width: 500px;
+  min-height: 600px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: #333;
 }
@@ -15,7 +16,9 @@ body {
 .container {
   background: white;
   margin: 0;
-  min-height: 500px;
+  min-height: 600px;
+  max-height: 800px;
+  overflow-y: auto;
 }
 
 header {
@@ -23,11 +26,21 @@ header {
   color: white;
   padding: 20px;
   text-align: center;
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
 header h1 {
-  font-size: 20px;
+  font-size: 22px;
   font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.subtitle {
+  font-size: 12px;
+  opacity: 0.9;
+  font-weight: 400;
 }
 
 .loading {
@@ -37,6 +50,12 @@ header h1 {
   justify-content: center;
   padding: 60px 20px;
   text-align: center;
+}
+
+.loading-detail {
+  font-size: 12px;
+  color: #999;
+  margin-top: 8px;
 }
 
 .spinner {
@@ -65,130 +84,361 @@ header h1 {
   color: #d32f2f;
 }
 
+.error-icon {
+  font-size: 48px;
+  margin-bottom: 10px;
+}
+
+.error-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
 .error-message {
   margin-top: 10px;
   font-size: 14px;
   color: #666;
+  line-height: 1.5;
+  margin-bottom: 20px;
 }
 
 .content {
   padding: 20px;
 }
 
-.repo-header {
+.settings-warning {
+  background: #fff3cd;
+  border: 1px solid #ffc107;
+  border-radius: 6px;
+  padding: 12px;
   margin-bottom: 20px;
-  padding-bottom: 15px;
-  border-bottom: 2px solid #f0f0f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
-.repo-name {
-  font-size: 18px;
+.settings-warning p {
+  color: #856404;
+  font-size: 13px;
+  margin: 0;
+}
+
+.btn-settings, .btn-settings-small {
+  background: #667eea;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-settings:hover, .btn-settings-small:hover {
+  background: #5568d3;
+}
+
+.btn-settings-small {
+  padding: 6px 12px;
+  font-size: 11px;
+}
+
+/* Feature Sections */
+.feature-section {
+  margin-bottom: 24px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.feature-section:last-of-type {
+  border-bottom: none;
+}
+
+.feature-header {
+  margin-bottom: 12px;
+}
+
+.feature-header h2 {
+  font-size: 16px;
   font-weight: 600;
   color: #333;
-  margin-bottom: 8px;
-  word-break: break-word;
 }
 
-.repo-description {
+.feature-content {
   font-size: 14px;
-  color: #666;
-  line-height: 1.5;
+  line-height: 1.6;
+  color: #555;
 }
 
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
-  margin-bottom: 20px;
+/* Feature 1: Summary */
+.summary-text {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #555;
 }
 
-.stat-card {
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-  border-radius: 8px;
-  padding: 15px;
-  text-align: center;
-  transition: transform 0.2s;
+/* Feature 2: Key Files */
+.key-files-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
-.stat-card:hover {
-  transform: translateY(-2px);
+.key-file-item {
+  background: #f8f9fa;
+  border-left: 3px solid #667eea;
+  padding: 10px 12px;
+  border-radius: 4px;
 }
 
-.stat-icon {
-  font-size: 24px;
-  margin-bottom: 5px;
-}
-
-.stat-value {
-  font-size: 20px;
+.key-file-path {
   font-weight: 600;
   color: #333;
+  font-size: 13px;
+  margin-bottom: 4px;
+  font-family: 'Monaco', 'Courier New', monospace;
+}
+
+.key-file-purpose {
+  font-size: 12px;
+  color: #666;
   margin-bottom: 4px;
 }
 
-.stat-label {
-  font-size: 12px;
+.key-file-importance {
+  font-size: 11px;
+  color: #667eea;
+  font-style: italic;
+}
+
+/* Feature 3: Pipeline */
+.pipeline-text {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #555;
+  white-space: pre-wrap;
+}
+
+/* Feature 4: Use Cases */
+.use-cases-list {
+  list-style: none;
+  padding: 0;
+}
+
+.use-cases-list li {
+  padding: 8px 0;
+  padding-left: 20px;
+  position: relative;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.use-cases-list li:before {
+  content: "✓";
+  position: absolute;
+  left: 0;
+  color: #4caf50;
+  font-weight: bold;
+}
+
+/* Feature 5: Requirements */
+.requirements-content {
+  font-size: 14px;
+}
+
+.req-section {
+  margin-bottom: 16px;
+}
+
+.req-section strong {
+  display: block;
+  margin-bottom: 6px;
+  color: #333;
+  font-size: 13px;
+}
+
+.req-section p {
+  margin: 0;
+  line-height: 1.5;
+  color: #555;
+}
+
+.req-section ul {
+  margin: 6px 0 0 20px;
+  padding: 0;
+}
+
+.req-section li {
+  margin-bottom: 4px;
+  line-height: 1.4;
+}
+
+.req-section.warnings {
+  background: #fff3cd;
+  padding: 10px;
+  border-radius: 4px;
+  border-left: 3px solid #ffc107;
+}
+
+.req-section.warnings strong {
+  color: #856404;
+}
+
+/* Feature 6: Health Check */
+.health-content {
+  font-size: 14px;
+}
+
+.health-header {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+  align-items: center;
+}
+
+.health-score {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 16px;
+  text-align: center;
+  min-width: 80px;
+}
+
+.health-score-value {
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.health-score-label {
+  font-size: 11px;
   color: #666;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
-.info-section {
-  margin-bottom: 20px;
+.health-status {
+  flex: 1;
 }
 
-.info-item {
+.status-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+}
+
+.status-maintenance {
+  font-size: 13px;
+  color: #666;
+  margin: 0;
+}
+
+.health-active .health-score-value,
+.health-active .status-badge {
+  color: #4caf50;
+  background: #e8f5e9;
+}
+
+.health-moderate .health-score-value,
+.health-moderate .status-badge {
+  color: #ff9800;
+  background: #fff3e0;
+}
+
+.health-inactive .health-score-value,
+.health-inactive .status-badge {
+  color: #757575;
+  background: #f5f5f5;
+}
+
+.health-risky .health-score-value,
+.health-risky .status-badge {
+  color: #f44336;
+  background: #ffebee;
+}
+
+.health-section {
+  margin-bottom: 12px;
+}
+
+.health-section strong {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 13px;
+  color: #333;
+}
+
+.health-section ul {
+  margin: 6px 0 0 20px;
+  padding: 0;
+}
+
+.health-section li {
+  margin-bottom: 4px;
+  line-height: 1.4;
+}
+
+.health-section.concerns {
+  background: #ffebee;
+  padding: 10px;
+  border-radius: 4px;
+  border-left: 3px solid #f44336;
+}
+
+.health-section.concerns strong {
+  color: #c62828;
+}
+
+.empty-state {
+  color: #999;
+  font-style: italic;
+  font-size: 13px;
+}
+
+/* Metadata Footer */
+.metadata-footer {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 2px solid #f0f0f0;
+}
+
+.metadata-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 0;
-  border-bottom: 1px solid #f0f0f0;
+  font-size: 12px;
 }
 
-.info-item:last-child {
-  border-bottom: none;
-}
-
-.info-label {
-  font-size: 14px;
+.metadata-label {
   color: #666;
   font-weight: 500;
 }
 
-.info-value {
-  font-size: 14px;
+.metadata-value {
   color: #333;
   font-weight: 600;
-  text-align: right;
-  max-width: 60%;
-  word-break: break-word;
 }
 
-.topics-section {
-  margin-bottom: 20px;
-}
-
-.topics-container {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 10px;
-}
-
-.topic-tag {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  padding: 4px 12px;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: 500;
-}
-
+/* Actions */
 .actions {
   text-align: center;
   margin-top: 20px;
   padding-top: 20px;
   border-top: 2px solid #f0f0f0;
+  display: flex;
+  gap: 10px;
+  justify-content: center;
 }
 
 .btn-primary {
@@ -201,6 +451,8 @@ header h1 {
   font-weight: 600;
   font-size: 14px;
   transition: transform 0.2s, box-shadow 0.2s;
+  border: none;
+  cursor: pointer;
 }
 
 .btn-primary:hover {
@@ -208,3 +460,39 @@ header h1 {
   box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
 }
 
+.btn-secondary {
+  display: inline-block;
+  background: #f5f5f5;
+  color: #333;
+  padding: 12px 24px;
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 14px;
+  transition: background 0.2s;
+  border: none;
+  cursor: pointer;
+}
+
+.btn-secondary:hover {
+  background: #e0e0e0;
+}
+
+.btn-website {
+  display: inline-block;
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  color: white;
+  padding: 12px 24px;
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 14px;
+  transition: transform 0.2s, box-shadow 0.2s;
+  border: none;
+  cursor: pointer;
+}
+
+.btn-website:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(245, 87, 108, 0.4);
+}

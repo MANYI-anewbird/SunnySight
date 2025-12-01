@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Settings - Sunnysett Hub</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    body {
+      width: 600px;
+      min-height: 400px;
+      padding: 0;
+    }
+    .settings-container {
+      padding: 30px;
+    }
+    .settings-header {
+      margin-bottom: 30px;
+    }
+    .settings-header h1 {
+      font-size: 24px;
+      color: #333;
+      margin-bottom: 10px;
+    }
+    .settings-header p {
+      color: #666;
+      font-size: 14px;
+    }
+    .form-group {
+      margin-bottom: 25px;
+    }
+    .form-label {
+      display: block;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+    .form-label .optional {
+      font-weight: 400;
+      color: #999;
+      font-size: 12px;
+    }
+    .form-input {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #e0e0e0;
+      border-radius: 6px;
+      font-size: 14px;
+      font-family: 'Monaco', 'Courier New', monospace;
+      transition: border-color 0.2s;
+    }
+    .form-input:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+    .form-help {
+      margin-top: 6px;
+      font-size: 12px;
+      color: #666;
+      line-height: 1.5;
+    }
+    .form-help a {
+      color: #667eea;
+      text-decoration: none;
+    }
+    .form-help a:hover {
+      text-decoration: underline;
+    }
+    .btn-save {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 12px 30px;
+      border: none;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .btn-save:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+    .status-message {
+      margin-top: 15px;
+      padding: 12px;
+      border-radius: 6px;
+      font-size: 14px;
+      display: none;
+    }
+    .status-message.success {
+      background: #e8f5e9;
+      color: #2e7d32;
+      border: 1px solid #4caf50;
+      display: block;
+    }
+    .status-message.error {
+      background: #ffebee;
+      color: #c62828;
+      border: 1px solid #ef5350;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div class="settings-container">
+    <div class="settings-header">
+      <h1>⚙️ API Configuration</h1>
+      <p>Configure your API keys to enable AI-powered repository analysis</p>
+    </div>
+
+    <form id="settings-form">
+      <div class="form-group">
+        <label class="form-label">
+          OpenAI API Key <span style="color: #d32f2f;">*</span>
+        </label>
+        <input 
+          type="password" 
+          id="openai-key" 
+          class="form-input" 
+          placeholder="sk-..."
+          autocomplete="off"
+        />
+        <div class="form-help">
+          Required for AI analysis. Get your key from 
+          <a href="https://platform.openai.com/api-keys" target="_blank">OpenAI Platform</a>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">
+          GitHub Personal Access Token <span class="optional">(Optional)</span>
+        </label>
+        <input 
+          type="password" 
+          id="github-token" 
+          class="form-input" 
+          placeholder="ghp_..."
+          autocomplete="off"
+        />
+        <div class="form-help">
+          Optional but recommended for higher rate limits. Create one at 
+          <a href="https://github.com/settings/tokens" target="_blank">GitHub Settings</a>
+          <br>
+          <strong>Note:</strong> No special permissions needed, just basic read access.
+        </div>
+      </div>
+
+      <button type="submit" class="btn-save">💾 Save Settings</button>
+      
+      <div id="status-message" class="status-message"></div>
+    </form>
+  </div>
+
+  <script src="settings.js"></script>
+</body>
+</html>
+

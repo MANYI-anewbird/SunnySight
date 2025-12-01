@@ -5,8 +5,66 @@ class RepoAnalyzer {
     this.apiService = apiService;
   }
 
+  // Get cache key for repository
+  getCacheKey(owner, repo) {
+    return `analysis_${owner}_${repo}`;
+  }
+
+  // Get cached analysis if available and valid
+  async getCachedAnalysis(owner, repo, repoPushedAt = null) {
+    const cacheKey = this.getCacheKey(owner, repo);
+    return new Promise((resolve) => {
+      chrome.storage.local.get([cacheKey], (result) => {
+        const cached = result[cacheKey];
+        if (!cached) {
+          resolve(null);
+          return;
+        }
+
+        // Check if cache is expired (24 hours)
+        const cacheAge = Date.now() - cached.timestamp;
+        const twentyFourHours = 24 * 60 * 60 * 1000;
+        
+        if (cacheAge > twentyFourHours) {
+          resolve(null);
+          return;
+        }
+
+        // Check if repo was updated since cache
+        if (repoPushedAt && cached.repoPushedAt) {
+          const cachedDate = new Date(cached.repoPushedAt);
+          const repoDate = new Date(repoPushedAt);
+          if (repoDate > cachedDate) {
+            resolve(null);
+            return;
+          }
+        }
+
+        resolve(cached.analysis);
+      });
+    });
+  }
+
+  // Save analysis to cache
+  async saveToCache(owner, repo, analysis, repoPushedAt = null) {
+    const cacheKey = this.getCacheKey(owner, repo);
+    const cacheData = {
+      analysis: analysis,
+      timestamp: Date.now(),
+      repoPushedAt: repoPushedAt,
+      owner: owner,
+      repo: repo
+    };
+    
+    return new Promise((resolve) => {
+      chrome.storage.local.set({ [cacheKey]: cacheData }, () => {
+        resolve();
+      });
+    });
+  }
+
   // Main analysis function - orchestrates all 6 killer features
-  async analyzeRepository(owner, repo) {
+  async analyzeRepository(owner, repo, forceRefresh = false, progressCallback = null) {
     try {
       // Get API keys
       const { githubToken, openaiKey } = await this.apiService.getAPIKeys();
@@ -15,7 +73,42 @@ class RepoAnalyzer {
         throw new Error('OpenAI API key not configured. Please set it in settings.');
       }
 
+      // Check cache first (unless force refresh)
+      if (!forceRefresh) {
+        if (progressCallback) progressCallback('Checking cache...');
+        
+        // Check cache without repo info first (faster)
+        const cached = await this.getCachedAnalysis(owner, repo);
+        
+        if (cached) {
+          // If cache exists, verify it's still valid by checking repo's pushed_at
+          // Only fetch repo info if we have a cached result to validate
+          try {
+            const repoInfo = await this.apiService.getRepoInfo(owner, repo, githubToken);
+            const cachedWithValidation = await this.getCachedAnalysis(owner, repo, repoInfo.pushed_at);
+            
+            if (cachedWithValidation) {
+              // Return cached result with flag
+              return { ...cachedWithValidation, _cached: true };
+            }
+          } catch (err) {
+            // If repo info fetch fails, still return cached result
+            console.warn('Failed to validate cache, returning cached result anyway:', err);
+            return { ...cached, _cached: true };
+          }
+        }
+      }
+
       // Step 1: Collect all repository data in parallel
+      if (progressCallback) progressCallback('Fetching repository data...');
+      
+      // Create retry callback for progress updates
+      const createRetryCallback = (stepName) => (attempt, maxRetries, delay) => {
+        if (progressCallback) {
+          progressCallback(`${stepName}... Retrying (attempt ${attempt}/${maxRetries})`);
+        }
+      };
+
       const [
         repoInfo,
         languages,
@@ -25,13 +118,13 @@ class RepoAnalyzer {
         contributors,
         rootContents
       ] = await Promise.all([
-        this.apiService.getRepoInfo(owner, repo, githubToken),
-        this.apiService.getRepoLanguages(owner, repo, githubToken),
-        this.apiService.getReadme(owner, repo, githubToken),
-        this.apiService.getCommits(owner, repo, githubToken, 10),
-        this.apiService.getIssues(owner, repo, githubToken, 'open', 10),
-        this.apiService.getContributors(owner, repo, githubToken),
-        this.apiService.getRepoContents(owner, repo, '', githubToken)
+        this.apiService.getRepoInfo(owner, repo, githubToken, createRetryCallback('Fetching repo info')),
+        this.apiService.getRepoLanguages(owner, repo, githubToken, createRetryCallback('Fetching languages')),
+        this.apiService.getReadme(owner, repo, githubToken, createRetryCallback('Fetching README')),
+        this.apiService.getCommits(owner, repo, githubToken, 10, createRetryCallback('Fetching commits')),
+        this.apiService.getIssues(owner, repo, githubToken, 'open', 10, createRetryCallback('Fetching issues')),
+        this.apiService.getContributors(owner, repo, githubToken, createRetryCallback('Fetching contributors')),
+        this.apiService.getRepoContents(owner, repo, '', githubToken, createRetryCallback('Fetching file structure'))
       ]);
 
       // Step 2: Build file structure (identify key files)
@@ -58,10 +151,17 @@ class RepoAnalyzer {
       };
 
       // Step 4: Get AI analysis (all 6 features in one call)
-      const aiAnalysis = await this.apiService.analyzeRepoWithAI(repoData, openaiKey);
+      if (progressCallback) progressCallback('Analyzing with AI...');
+      const aiAnalysis = await this.apiService.analyzeRepoWithAI(
+        repoData, 
+        openaiKey,
+        createRetryCallback('AI analysis')
+      );
 
       // Step 5: Combine and return comprehensive analysis
-      return {
+      if (progressCallback) progressCallback('Processing results...');
+      
+      const analysis = {
         // Feature 1: AI Repo Summary
         summary: aiAnalysis.summary || 'Unable to generate summary',
         
@@ -106,6 +206,11 @@ class RepoAnalyzer {
           createdAt: repoData.created_at
         }
       };
+
+      // Save to cache
+      await this.saveToCache(owner, repo, analysis, repoData.pushed_at);
+
+      return analysis;
     } catch (error) {
       console.error('Error analyzing repository:', error);
       throw error;

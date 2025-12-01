@@ -1,4 +1,4 @@
-# 🚀 Sunnysett Hub - AI-Powered GitHub Repository Analyzer
+# 🚀 SunnySight - AI-Powered GitHub Repository Analyzer
 
 A powerful Chrome extension that provides deep technical insights into GitHub repositories using AI analysis. Understand repositories faster, identify key files, assess health, and avoid common pain points.
 
@@ -59,7 +59,7 @@ Is it active, risky, or outdated? Get a health score (0-100) with:
 ## 📖 Usage
 
 1. Visit any GitHub repository page (e.g., `https://github.com/owner/repo`)
-2. Click the Sunnysett Hub extension icon in your browser toolbar
+2. Click the SunnySight extension icon in your browser toolbar
 3. Wait 10-20 seconds for AI analysis to complete
 4. Review all 6 features in the popup:
    - Repository summary

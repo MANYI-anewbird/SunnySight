@@ -18,36 +18,67 @@ class APIService {
     });
   }
 
+  // Retry helper with exponential backoff
+  async retryWithBackoff(fn, maxRetries = 3, onRetry = null) {
+    let lastError;
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        return await fn();
+      } catch (error) {
+        lastError = error;
+        
+        // Don't retry on 4xx errors (client errors like auth, not found)
+        if (error.message && error.message.includes('error: 4')) {
+          throw error;
+        }
+        
+        // Don't retry on last attempt
+        if (attempt === maxRetries) {
+          break;
+        }
+        
+        // Calculate delay: 1s, 2s, 4s
+        const delay = Math.pow(2, attempt - 1) * 1000;
+        
+        // Call retry callback if provided
+        if (onRetry) {
+          onRetry(attempt, maxRetries, delay);
+        }
+        
+        // Wait before retrying
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+    throw lastError;
+  }
+
   // GitHub API: Get repository information
-  async getRepoInfo(owner, repo, githubToken = null) {
+  async getRepoInfo(owner, repo, githubToken = null, onRetry = null) {
     const url = `${this.githubBaseURL}/repos/${owner}/${repo}`;
     const headers = {
       'Accept': 'application/vnd.github.v3+json',
-      'User-Agent': 'Sunnysett-Hub-Extension'
+      'User-Agent': 'SunnySight-Extension'
     };
     
     if (githubToken) {
       headers['Authorization'] = `token ${githubToken}`;
     }
 
-    try {
+    return this.retryWithBackoff(async () => {
       const response = await fetch(url, { headers });
       if (!response.ok) {
         throw new Error(`GitHub API error: ${response.status}`);
       }
       return await response.json();
-    } catch (error) {
-      console.error('Error fetching repo info:', error);
-      throw error;
-    }
+    }, 3, onRetry);
   }
 
   // GitHub API: Get repository languages
-  async getRepoLanguages(owner, repo, githubToken = null) {
+  async getRepoLanguages(owner, repo, githubToken = null, onRetry = null) {
     const url = `${this.githubBaseURL}/repos/${owner}/${repo}/languages`;
     const headers = {
       'Accept': 'application/vnd.github.v3+json',
-      'User-Agent': 'Sunnysett-Hub-Extension'
+      'User-Agent': 'SunnySight-Extension'
     };
     
     if (githubToken) {
@@ -55,11 +86,13 @@ class APIService {
     }
 
     try {
-      const response = await fetch(url, { headers });
-      if (!response.ok) {
-        throw new Error(`GitHub API error: ${response.status}`);
-      }
-      return await response.json();
+      return await this.retryWithBackoff(async () => {
+        const response = await fetch(url, { headers });
+        if (!response.ok) {
+          throw new Error(`GitHub API error: ${response.status}`);
+        }
+        return await response.json();
+      }, 3, onRetry);
     } catch (error) {
       console.error('Error fetching languages:', error);
       return {};
@@ -67,11 +100,11 @@ class APIService {
   }
 
   // GitHub API: Get repository contents (file structure)
-  async getRepoContents(owner, repo, path = '', githubToken = null) {
+  async getRepoContents(owner, repo, path = '', githubToken = null, onRetry = null) {
     const url = `${this.githubBaseURL}/repos/${owner}/${repo}/contents/${path}`;
     const headers = {
       'Accept': 'application/vnd.github.v3+json',
-      'User-Agent': 'Sunnysett-Hub-Extension'
+      'User-Agent': 'SunnySight-Extension'
     };
     
     if (githubToken) {
@@ -79,11 +112,13 @@ class APIService {
     }
 
     try {
-      const response = await fetch(url, { headers });
-      if (!response.ok) {
-        throw new Error(`GitHub API error: ${response.status}`);
-      }
-      return await response.json();
+      return await this.retryWithBackoff(async () => {
+        const response = await fetch(url, { headers });
+        if (!response.ok) {
+          throw new Error(`GitHub API error: ${response.status}`);
+        }
+        return await response.json();
+      }, 3, onRetry);
     } catch (error) {
       console.error('Error fetching contents:', error);
       return [];
@@ -91,11 +126,11 @@ class APIService {
   }
 
   // GitHub API: Get README content
-  async getReadme(owner, repo, githubToken = null) {
+  async getReadme(owner, repo, githubToken = null, onRetry = null) {
     const url = `${this.githubBaseURL}/repos/${owner}/${repo}/readme`;
     const headers = {
       'Accept': 'application/vnd.github.v3+json',
-      'User-Agent': 'Sunnysett-Hub-Extension'
+      'User-Agent': 'SunnySight-Extension'
     };
     
     if (githubToken) {
@@ -103,12 +138,14 @@ class APIService {
     }
 
     try {
-      const response = await fetch(url, { headers });
-      if (!response.ok) {
-        return null;
-      }
-      const data = await response.json();
-      return atob(data.content); // Decode base64
+      return await this.retryWithBackoff(async () => {
+        const response = await fetch(url, { headers });
+        if (!response.ok) {
+          return null;
+        }
+        const data = await response.json();
+        return atob(data.content); // Decode base64
+      }, 3, onRetry);
     } catch (error) {
       console.error('Error fetching README:', error);
       return null;
@@ -116,11 +153,11 @@ class APIService {
   }
 
   // GitHub API: Get repository commits (for activity analysis)
-  async getCommits(owner, repo, githubToken = null, perPage = 10) {
+  async getCommits(owner, repo, githubToken = null, perPage = 10, onRetry = null) {
     const url = `${this.githubBaseURL}/repos/${owner}/${repo}/commits?per_page=${perPage}`;
     const headers = {
       'Accept': 'application/vnd.github.v3+json',
-      'User-Agent': 'Sunnysett-Hub-Extension'
+      'User-Agent': 'SunnySight-Extension'
     };
     
     if (githubToken) {
@@ -128,11 +165,13 @@ class APIService {
     }
 
     try {
-      const response = await fetch(url, { headers });
-      if (!response.ok) {
-        throw new Error(`GitHub API error: ${response.status}`);
-      }
-      return await response.json();
+      return await this.retryWithBackoff(async () => {
+        const response = await fetch(url, { headers });
+        if (!response.ok) {
+          throw new Error(`GitHub API error: ${response.status}`);
+        }
+        return await response.json();
+      }, 3, onRetry);
     } catch (error) {
       console.error('Error fetching commits:', error);
       return [];
@@ -140,11 +179,11 @@ class APIService {
   }
 
   // GitHub API: Get repository issues
-  async getIssues(owner, repo, githubToken = null, state = 'open', perPage = 10) {
+  async getIssues(owner, repo, githubToken = null, state = 'open', perPage = 10, onRetry = null) {
     const url = `${this.githubBaseURL}/repos/${owner}/${repo}/issues?state=${state}&per_page=${perPage}`;
     const headers = {
       'Accept': 'application/vnd.github.v3+json',
-      'User-Agent': 'Sunnysett-Hub-Extension'
+      'User-Agent': 'SunnySight-Extension'
     };
     
     if (githubToken) {
@@ -152,11 +191,13 @@ class APIService {
     }
 
     try {
-      const response = await fetch(url, { headers });
-      if (!response.ok) {
-        throw new Error(`GitHub API error: ${response.status}`);
-      }
-      return await response.json();
+      return await this.retryWithBackoff(async () => {
+        const response = await fetch(url, { headers });
+        if (!response.ok) {
+          throw new Error(`GitHub API error: ${response.status}`);
+        }
+        return await response.json();
+      }, 3, onRetry);
     } catch (error) {
       console.error('Error fetching issues:', error);
       return [];
@@ -164,11 +205,11 @@ class APIService {
   }
 
   // GitHub API: Get repository contributors
-  async getContributors(owner, repo, githubToken = null) {
+  async getContributors(owner, repo, githubToken = null, onRetry = null) {
     const url = `${this.githubBaseURL}/repos/${owner}/${repo}/contributors?per_page=10`;
     const headers = {
       'Accept': 'application/vnd.github.v3+json',
-      'User-Agent': 'Sunnysett-Hub-Extension'
+      'User-Agent': 'SunnySight-Extension'
     };
     
     if (githubToken) {
@@ -176,11 +217,13 @@ class APIService {
     }
 
     try {
-      const response = await fetch(url, { headers });
-      if (!response.ok) {
-        throw new Error(`GitHub API error: ${response.status}`);
-      }
-      return await response.json();
+      return await this.retryWithBackoff(async () => {
+        const response = await fetch(url, { headers });
+        if (!response.ok) {
+          throw new Error(`GitHub API error: ${response.status}`);
+        }
+        return await response.json();
+      }, 3, onRetry);
     } catch (error) {
       console.error('Error fetching contributors:', error);
       return [];
@@ -192,7 +235,7 @@ class APIService {
     const url = `${this.githubBaseURL}/repos/${owner}/${repo}/contents/${path}`;
     const headers = {
       'Accept': 'application/vnd.github.v3+json',
-      'User-Agent': 'Sunnysett-Hub-Extension'
+      'User-Agent': 'SunnySight-Extension'
     };
     
     if (githubToken) {
@@ -216,7 +259,7 @@ class APIService {
   }
 
   // OpenAI API: Analyze repository with all 6 features
-  async analyzeRepoWithAI(repoData, openaiKey) {
+  async analyzeRepoWithAI(repoData, openaiKey, onRetry = null) {
     const {
       name,
       description,
@@ -285,7 +328,7 @@ Please provide a JSON response with the following structure:
 
 Be specific, technical, and actionable. Focus on real pain points developers face.`;
 
-    try {
+    return this.retryWithBackoff(async () => {
       const response = await fetch(`${this.openaiBaseURL}/chat/completions`, {
         method: 'POST',
         headers: {
@@ -310,7 +353,7 @@ Be specific, technical, and actionable. Focus on real pain points developers fac
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorData = await response.json().catch(() => ({}));
         throw new Error(`OpenAI API error: ${errorData.error?.message || response.statusText}`);
       }
 
@@ -326,10 +369,7 @@ Be specific, technical, and actionable. Focus on real pain points developers fac
       }
 
       return JSON.parse(jsonContent);
-    } catch (error) {
-      console.error('Error calling OpenAI API:', error);
-      throw error;
-    }
+    }, 3, onRetry);
   }
 }
 

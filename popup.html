@@ -3,20 +3,42 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sunnysett Hub - AI Repo Analyzer</title>
+  <title>SunnySight - AI Repo Analyzer</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <div class="container">
     <header>
-      <h1>🚀 Sunnysett Hub</h1>
-      <p class="subtitle">AI-Powered Repository Analysis</p>
+      <div class="header-content">
+        <div>
+          <h1>🚀 SunnySight</h1>
+          <p class="subtitle">AI-Powered Repository Analysis</p>
+        </div>
+        <div class="header-actions">
+          <button id="history-btn" class="btn-header" title="Analysis History">📜</button>
+          <button id="settings-btn-header" class="btn-header" title="Settings">⚙️</button>
+        </div>
+      </div>
     </header>
+
+    <!-- History Dropdown -->
+    <div id="history-dropdown" class="history-dropdown" style="display: none;">
+      <div class="history-header">
+        <h3>Recent Analyses</h3>
+        <button id="history-close" class="btn-close">×</button>
+      </div>
+      <div id="history-list" class="history-list">
+        <p class="empty-state">No analysis history yet</p>
+      </div>
+    </div>
     
     <div id="loading" class="loading">
       <div class="spinner"></div>
-      <p>Analyzing repository...</p>
-      <p class="loading-detail">This may take 10-20 seconds</p>
+      <p id="loading-message">Analyzing repository...</p>
+      <p class="loading-detail" id="loading-detail">This may take 10-20 seconds</p>
+      <div class="progress-bar-container">
+        <div id="progress-bar" class="progress-bar"></div>
+      </div>
     </div>
 
     <div id="error" class="error" style="display: none;">
@@ -33,10 +55,17 @@
         <button id="settings-btn-inline" class="btn-settings-small">Configure</button>
       </div>
 
+      <!-- Cached Badge -->
+      <div id="cached-badge" class="cached-badge" style="display: none;">
+        <span>💾 Cached Result</span>
+        <button id="refresh-btn" class="btn-refresh">🔄 Refresh</button>
+      </div>
+
       <!-- Feature 1: AI Repo Summary -->
       <section class="feature-section">
         <div class="feature-header">
           <h2>📋 Repository Summary</h2>
+          <button id="copy-summary-btn" class="btn-copy-small" title="Copy summary">📋</button>
         </div>
         <div class="feature-content">
           <p id="repo-summary" class="summary-text">-</p>
@@ -123,9 +152,17 @@
 
       <div class="actions">
         <a id="repo-link" href="#" target="_blank" class="btn-primary">🔗 View on GitHub</a>
-        <a href="https://sunnysett.com/github" target="_blank" class="btn-website">🌐 Sunnysett Hub</a>
+        <button id="export-btn" class="btn-export">💾 Export JSON</button>
+        <button id="copy-json-btn" class="btn-copy-json">📋 Copy JSON</button>
+        <a href="https://sunnysett.com/github" target="_blank" class="btn-website">🌐 SunnySight</a>
         <button id="settings-btn-footer" class="btn-secondary">⚙️ Settings</button>
       </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast" style="display: none;">
+      <span id="toast-message"></span>
+    </div>
     </div>
   </div>
 

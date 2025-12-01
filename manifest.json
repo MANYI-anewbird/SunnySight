@@ -1,11 +1,12 @@
 {
   "manifest_version": 3,
-  "name": "Sunnysett Hub - AI Repo Analyzer",
+  "name": "SunnySight - AI Repo Analyzer",
   "version": "2.0.0",
   "description": "AI-powered GitHub repository analyzer with technical insights and pain point detection",
   "permissions": [
     "activeTab",
-    "storage"
+    "storage",
+    "downloads"
   ],
   "host_permissions": [
     "https://github.com/*",

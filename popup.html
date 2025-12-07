@@ -88,6 +88,7 @@
       <section class="feature-section">
         <div class="feature-header">
           <h2>🏗️ Architecture & Pipeline</h2>
+          <button id="architecture-ui-btn" class="btn-a2ui" title="Show Details">Show Details</button>
         </div>
         <div class="feature-content">
           <p id="pipeline-explanation" class="pipeline-text">-</p>
@@ -98,6 +99,7 @@
       <section class="feature-section">
         <div class="feature-header">
           <h2>💡 Use Cases</h2>
+          <button id="usecases-ui-btn" class="btn-a2ui" title="Show Details">Show Details</button>
         </div>
         <div class="feature-content">
           <ul id="use-cases" class="use-cases-list">
@@ -110,6 +112,7 @@
       <section class="feature-section">
         <div class="feature-header">
           <h2>📦 Dependencies & Environment</h2>
+          <button id="dependencies-ui-btn" class="btn-a2ui" title="Security">Security</button>
         </div>
         <div class="feature-content">
           <div id="requirements" class="requirements-content">
@@ -156,6 +159,65 @@
         <button id="copy-json-btn" class="btn-copy-json">📋 Copy JSON</button>
         <a href="https://sunnysett.com/github" target="_blank" class="btn-website">🌐 SunnySight</a>
         <button id="settings-btn-footer" class="btn-secondary">⚙️ Settings</button>
+      </div>
+    </div>
+
+    <!-- Architecture UI View -->
+    <div id="architecture-view" class="a2ui-view" style="display: none;">
+      <div class="a2ui-header">
+        <div>
+          <h1>🏗️ Architecture & Pipeline</h1>
+          <p class="subtitle">A2UI View</p>
+        </div>
+        <button id="architecture-back-btn" class="btn-header" title="Back to Main">← Back</button>
+      </div>
+      <div class="a2ui-content-container">
+        <div id="architecture-content" class="a2ui-content">
+          <p class="empty-state">Loading architecture data...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Use Cases UI View -->
+    <div id="usecases-view" class="a2ui-view" style="display: none;">
+      <div class="a2ui-header">
+        <div>
+          <h1>💡 Use Cases</h1>
+          <p class="subtitle">A2UI View</p>
+        </div>
+        <button id="usecases-back-btn" class="btn-header" title="Back to Main">← Back</button>
+      </div>
+      <div class="a2ui-content-container">
+        <div id="usecases-content" class="a2ui-content">
+          <p class="empty-state">Loading use cases data...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dependencies UI View -->
+    <div id="dependencies-view" class="a2ui-view" style="display: none;">
+      <div class="a2ui-header">
+        <div>
+          <h1>📦 Dependencies & Environment</h1>
+          <p class="subtitle">A2UI View with Security</p>
+        </div>
+        <button id="dependencies-back-btn" class="btn-header" title="Back to Main">← Back</button>
+      </div>
+      <div class="a2ui-content-container">
+        <div id="dependencies-content" class="a2ui-content">
+          <p class="empty-state">Loading dependencies data...</p>
+        </div>
+        <!-- Security Section -->
+        <section class="feature-section">
+          <div class="feature-header">
+            <h2>🔒 Security Analysis</h2>
+          </div>
+          <div class="feature-content">
+            <div id="security-content" class="a2ui-content">
+              <p class="empty-state">Loading security analysis...</p>
+            </div>
+          </div>
+        </section>
       </div>
     </div>
 

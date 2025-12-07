@@ -396,6 +396,9 @@ header h1 {
 
 .feature-header {
   display: flex;
+  align-items: center;
+  justify-content: space-between;
+  display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 12px;
@@ -858,4 +861,104 @@ header h1 {
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--accent-yellow);
+}
+
+/* A2UI Button */
+.btn-a2ui {
+  background: linear-gradient(135deg, var(--accent-yellow) 0%, var(--accent-yellow-dark) 100%);
+  color: var(--dark-bg);
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  transition: all 0.2s;
+  box-shadow: 0 2px 6px rgba(255, 184, 77, 0.3);
+  margin-left: auto;
+}
+
+.btn-a2ui:hover {
+  background: linear-gradient(135deg, var(--accent-yellow-bright) 0%, var(--accent-yellow) 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(255, 184, 77, 0.5);
+}
+
+/* A2UI Content Container */
+.a2ui-content {
+  padding: 0;
+  min-height: 200px;
+}
+
+.a2ui-container {
+  padding: 16px;
+  background: var(--dark-bg-secondary);
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+}
+
+/* Security Container */
+.security-container {
+  margin-top: 16px;
+}
+
+.security-risks {
+  background: rgba(244, 67, 54, 0.1);
+  border: 1px solid rgba(244, 67, 54, 0.3);
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.security-safe {
+  background: rgba(76, 175, 80, 0.1);
+  border: 1px solid rgba(76, 175, 80, 0.3);
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.security-list {
+  list-style: none;
+  padding: 0;
+  margin: 12px 0 0 0;
+}
+
+.security-item {
+  padding: 8px 12px;
+  margin: 8px 0;
+  background: rgba(244, 67, 54, 0.15);
+  border-left: 3px solid var(--error-red);
+  border-radius: 4px;
+}
+
+/* A2UI View Container */
+.a2ui-view {
+  min-height: 600px;
+  max-height: 800px;
+  overflow-y: auto;
+}
+
+.a2ui-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--dark-bg-secondary);
+}
+
+.a2ui-header h1 {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.a2ui-header .subtitle {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin: 4px 0 0 0;
+}
+
+.a2ui-content-container {
+  padding: 20px;
 }

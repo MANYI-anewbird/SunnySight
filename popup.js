@@ -62,6 +62,237 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
       });
     }
+
+    // A2UI Navigation buttons
+    const architectureBtn = document.getElementById('architecture-ui-btn');
+    const useCasesBtn = document.getElementById('usecases-ui-btn');
+    const dependenciesBtn = document.getElementById('dependencies-ui-btn');
+    
+    // Back buttons
+    const architectureBackBtn = document.getElementById('architecture-back-btn');
+    const useCasesBackBtn = document.getElementById('usecases-back-btn');
+    const dependenciesBackBtn = document.getElementById('dependencies-back-btn');
+    
+    if (architectureBtn) {
+      architectureBtn.addEventListener('click', () => {
+        showA2UIView('architecture');
+      });
+    }
+    
+    if (useCasesBtn) {
+      useCasesBtn.addEventListener('click', () => {
+        showA2UIView('usecases');
+      });
+    }
+    
+    if (dependenciesBtn) {
+      dependenciesBtn.addEventListener('click', () => {
+        showA2UIView('dependencies');
+      });
+    }
+
+    if (architectureBackBtn) {
+      architectureBackBtn.addEventListener('click', () => {
+        hideA2UIView();
+      });
+    }
+
+    if (useCasesBackBtn) {
+      useCasesBackBtn.addEventListener('click', () => {
+        hideA2UIView();
+      });
+    }
+
+    if (dependenciesBackBtn) {
+      dependenciesBackBtn.addEventListener('click', () => {
+        hideA2UIView();
+      });
+    }
+  }
+
+  function showA2UIView(viewType) {
+    // Hide main content and other UI elements
+    if (content) content.style.display = 'none';
+    if (loading) loading.style.display = 'none';
+    if (error) error.style.display = 'none';
+    
+    // Hide history dropdown if open
+    const historyDropdown = document.getElementById('history-dropdown');
+    if (historyDropdown) historyDropdown.style.display = 'none';
+
+    // Hide all views first
+    const allViews = ['architecture-view', 'usecases-view', 'dependencies-view'];
+    allViews.forEach(viewId => {
+      const view = document.getElementById(viewId);
+      if (view) view.style.display = 'none';
+    });
+
+    // Show selected view
+    const viewId = `${viewType}-view`;
+    const view = document.getElementById(viewId);
+    if (view) {
+      view.style.display = 'block';
+      // Load data for the view
+      loadA2UIData(viewType);
+    }
+  }
+
+  function hideA2UIView() {
+    // Hide all views
+    const allViews = ['architecture-view', 'usecases-view', 'dependencies-view'];
+    allViews.forEach(viewId => {
+      const view = document.getElementById(viewId);
+      if (view) view.style.display = 'none';
+    });
+
+    // Show main content if we have analysis
+    if (currentAnalysis && content) {
+      content.style.display = 'block';
+    } else if (content) {
+      // If no analysis, show content anyway (might be loading)
+      content.style.display = 'block';
+    }
+  }
+
+  async function loadA2UIData(viewType) {
+    // First try to use currentAnalysis if available
+    if (currentAnalysis) {
+      displayA2UIData(viewType, currentAnalysis);
+      return;
+    }
+
+    if (!currentOwner || !currentRepo) {
+      // Try to get from current tab
+      try {
+        const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+        if (tab.url && tab.url.includes('github.com')) {
+          const urlMatch = tab.url.match(/github\.com\/([^\/]+)\/([^\/]+)/);
+          if (urlMatch) {
+            const [, owner, repo] = urlMatch;
+            currentOwner = owner;
+            currentRepo = repo.replace(/\/$/, '');
+          }
+        }
+      } catch (err) {
+        console.error('Error getting tab info:', err);
+      }
+    }
+
+    if (!currentOwner || !currentRepo) {
+      const contentEl = document.getElementById(`${viewType}-content`);
+      if (contentEl) {
+        contentEl.innerHTML = '<p class="empty-state">Please open a GitHub repository page first</p>';
+      }
+      return;
+    }
+
+    const cacheKey = `analysis_${currentOwner}_${currentRepo}`;
+    chrome.storage.local.get([cacheKey], (result) => {
+      const cached = result[cacheKey];
+      if (cached && cached.analysis) {
+        displayA2UIData(viewType, cached.analysis);
+      } else {
+        const contentEl = document.getElementById(`${viewType}-content`);
+        if (contentEl) {
+          contentEl.innerHTML = '<p class="empty-state">No analysis data found. Please analyze the repository first.</p>';
+        }
+      }
+    });
+  }
+
+  function displayA2UIData(viewType, analysis) {
+    if (viewType === 'architecture') {
+      const contentEl = document.getElementById('architecture-content');
+      if (contentEl) {
+        if (!analysis.pipeline) {
+          contentEl.innerHTML = '<p class="empty-state">No architecture data available</p>';
+          return;
+        }
+        contentEl.innerHTML = `
+          <div class="a2ui-container">
+            <div class="pipeline-text">${analysis.pipeline}</div>
+          </div>
+        `;
+      }
+    } else if (viewType === 'usecases') {
+      const contentEl = document.getElementById('usecases-content');
+      if (contentEl) {
+        if (!analysis.useCases || analysis.useCases.length === 0) {
+          contentEl.innerHTML = '<p class="empty-state">No use cases data available</p>';
+          return;
+        }
+        let html = '<div class="a2ui-container"><ul class="use-cases-list">';
+        analysis.useCases.forEach(useCase => {
+          html += `<li>${useCase}</li>`;
+        });
+        html += '</ul></div>';
+        contentEl.innerHTML = html;
+      }
+    } else if (viewType === 'dependencies') {
+      const dependenciesEl = document.getElementById('dependencies-content');
+      const securityEl = document.getElementById('security-content');
+      
+      if (dependenciesEl) {
+        if (!analysis.requirements) {
+          dependenciesEl.innerHTML = '<p class="empty-state">No dependencies data available</p>';
+        } else {
+          const req = analysis.requirements;
+          let html = '<div class="a2ui-container">';
+          
+          if (req.dependencies && req.dependencies.length > 0) {
+            html += `<div class="req-section"><strong>Dependencies:</strong><ul>`;
+            req.dependencies.forEach(dep => {
+              html += `<li>${dep}</li>`;
+            });
+            html += `</ul></div>`;
+          }
+
+          if (req.environment) {
+            html += `<div class="req-section"><strong>Environment:</strong><p>${req.environment}</p></div>`;
+          }
+
+          if (req.installation) {
+            html += `<div class="req-section"><strong>Installation:</strong><p>${req.installation}</p></div>`;
+          }
+
+          if (req.warnings && req.warnings.length > 0) {
+            html += `<div class="req-section warnings"><strong>⚠️ Warnings:</strong><ul>`;
+            req.warnings.forEach(warning => {
+              html += `<li>${warning}</li>`;
+            });
+            html += `</ul></div>`;
+          }
+
+          html += '</div>';
+          dependenciesEl.innerHTML = html || '<div class="empty-state">No dependency information available</div>';
+        }
+      }
+
+      if (securityEl) {
+        const req = analysis.requirements || {};
+        const warnings = req.warnings || [];
+        
+        let html = '<div class="a2ui-container security-container">';
+        
+        if (warnings.length > 0) {
+          html += '<div class="security-risks">';
+          html += '<h3>⚠️ Security Risks Detected</h3>';
+          html += '<ul class="security-list">';
+          warnings.forEach(warning => {
+            html += `<li class="security-item">${warning}</li>`;
+          });
+          html += '</ul></div>';
+        } else {
+          html += '<div class="security-safe">';
+          html += '<h3>✅ No Security Risks Detected</h3>';
+          html += '<p>No obvious security warnings found in dependencies.</p>';
+          html += '</div>';
+        }
+
+        html += '</div>';
+        securityEl.innerHTML = html;
+      }
+    }
   }
 
   function openSettings() {
@@ -257,7 +488,17 @@ document.addEventListener('DOMContentLoaded', async () => {
   function displayAnalysis(analysis, isCached = false) {
     loading.style.display = 'none';
     error.style.display = 'none';
-    content.style.display = 'block';
+    
+    // Only show content if no A2UI view is currently displayed
+    const allViews = ['architecture-view', 'usecases-view', 'dependencies-view'];
+    const isA2UIViewVisible = allViews.some(viewId => {
+      const view = document.getElementById(viewId);
+      return view && view.style.display !== 'none';
+    });
+    
+    if (!isA2UIViewVisible) {
+      content.style.display = 'block';
+    }
 
     // Show cached badge if applicable
     const cachedBadge = document.getElementById('cached-badge');

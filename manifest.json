@@ -6,7 +6,8 @@
   "permissions": [
     "activeTab",
     "storage",
-    "downloads"
+    "downloads",
+    "tabs"
   ],
   "host_permissions": [
     "https://github.com/*",
@@ -33,6 +34,19 @@
     "48": "icons/icon48.png",
     "128": "icons/icon128.png"
   },
-  "options_page": "settings.html"
+  "options_page": "settings.html",
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "architecture-ui.html",
+        "usecases-ui.html",
+        "dependencies-ui.html",
+        "styles.css",
+        "api.js",
+        "analyzer.js"
+      ],
+      "matches": ["<all_urls>"]
+    }
+  ]
 }
 

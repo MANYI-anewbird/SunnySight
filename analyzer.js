@@ -127,16 +127,183 @@ class RepoAnalyzer {
         this.apiService.getRepoContents(owner, repo, '', githubToken, createRetryCallback('Fetching file structure'))
       ]);
 
-      // Step 2: Build file structure (identify key files)
-      const fileStructure = this.identifyKeyFiles(rootContents);
-
+      // Step 2: Build file structure and identify candidate key files
+      // First, collect all files including those in important directories
+      let allFiles = [...rootContents];
+      
+      // Recursively fetch files from important directories
+      const importantDirNames = [
+        'cloud_functions', 'cloud-functions', 'functions', 'lambda',
+        'airflow', 'dags', 'pipelines', 'pipeline',
+        'notebooks', 'notebook', 'jupyter',
+        'streamlit_app', 'streamlit',
+        'src', 'app', 'backend', 'frontend', 'core', 'models',
+        'services', 'api', 'apis', 'server'
+      ];
+      
+      if (progressCallback) progressCallback('Scanning important directories...');
+      
+      // Check which important directories exist in root
+      const importantDirs = rootContents.filter(item => 
+        item.type === 'dir' && importantDirNames.some(dir => 
+          item.name.toLowerCase().includes(dir.toLowerCase()) || 
+          dir.toLowerCase().includes(item.name.toLowerCase())
+        )
+      );
+      
+      // Fetch contents from important directories (limit to 8 for performance, but prioritize all important dirs)
+      // Sort by importance: cloud_functions, airflow, streamlit_app, etc. first
+      const sortedDirs = importantDirs.sort((a, b) => {
+        const aName = a.name.toLowerCase();
+        const bName = b.name.toLowerCase();
+        const priority = ['cloud_functions', 'cloud-functions', 'functions', 'airflow', 'streamlit_app', 'streamlit', 'notebooks'];
+        const aIdx = priority.findIndex(p => aName.includes(p));
+        const bIdx = priority.findIndex(p => bName.includes(p));
+        if (aIdx !== -1 && bIdx !== -1) return aIdx - bIdx;
+        if (aIdx !== -1) return -1;
+        if (bIdx !== -1) return 1;
+        return 0;
+      });
+      
+      // Recursively fetch files from directories (up to 5 levels deep)
+      const recursivelyFetchDir = async (dirPath, dirName, maxDepth = 5, currentDepth = 0) => {
+        if (currentDepth >= maxDepth) {
+          return [];
+        }
+        
+        try {
+          const contents = await this.apiService.getRepoContents(
+            owner,
+            repo,
+            dirPath,
+            githubToken,
+            createRetryCallback(`Fetching ${dirName}${currentDepth > 0 ? ` (level ${currentDepth + 1})` : ''}`)
+          );
+          
+          if (!Array.isArray(contents)) {
+            return [];
+          }
+          
+          const allFiles = [];
+          const subDirPromises = [];
+          
+          for (const item of contents) {
+            if (item.type === 'file') {
+              allFiles.push(item);
+            } else if (item.type === 'dir') {
+              // Recursively fetch subdirectories
+              subDirPromises.push(
+                recursivelyFetchDir(item.path || item.name, item.name, maxDepth, currentDepth + 1)
+              );
+            }
+          }
+          
+          // Wait for all subdirectories to be fetched
+          const subDirFiles = await Promise.all(subDirPromises);
+          subDirFiles.forEach(files => {
+            allFiles.push(...files);
+          });
+          
+          return allFiles;
+        } catch (err) {
+          console.warn(`Failed to fetch contents for ${dirPath}:`, err);
+          return [];
+        }
+      };
+      
+      const dirContentsPromises = sortedDirs.slice(0, 8).map(async (dir) => {
+        const dirPath = dir.path || dir.name;
+        return await recursivelyFetchDir(dirPath, dir.name);
+      });
+      
+      const dirContentsArrays = await Promise.all(dirContentsPromises);
+      // Flatten and add to allFiles
+      dirContentsArrays.forEach(contents => {
+        allFiles = allFiles.concat(contents);
+      });
+      
+      // Get candidate key folders using folder-based scoring
+      const candidateKeyFolders = this.apiService.identifyKeyFolders(allFiles, {});
+      
+      // Fetch file contents for ALL technical files (needed for semantic analysis)
+      const fileContentsMap = {};
+      if (progressCallback) progressCallback('Fetching file contents for semantic analysis...');
+      
+      // Collect all technical files from all folders
+      const allTechnicalFiles = [];
+      for (const item of allFiles) {
+        if (item.type === 'file') {
+          const path = item.path || item.name || '';
+          const filename = path.split('/').pop() || '';
+          if (this.apiService.isTechnicalFile(path, filename)) {
+            allTechnicalFiles.push(path);
+          }
+        }
+      }
+      
+      // Fetch contents (limit to top 30 for performance, prioritize important folders)
+      const filesToFetch = [];
+      candidateKeyFolders.forEach(folder => {
+        folder.keyFiles.forEach(filePath => {
+          if (!filesToFetch.includes(filePath)) {
+            filesToFetch.push(filePath);
+          }
+        });
+      });
+      
+      // Add more files from important folders
+      allTechnicalFiles.slice(0, 30).forEach(filePath => {
+        if (!filesToFetch.includes(filePath)) {
+          filesToFetch.push(filePath);
+        }
+      });
+      
+      await Promise.all(
+        filesToFetch.slice(0, 30).map(async (filePath) => {
+          try {
+            const content = await this.apiService.getFileContent(
+              owner, 
+              repo, 
+              filePath, 
+              githubToken
+            );
+            if (content) {
+              fileContentsMap[filePath] = content.substring(0, 8000); // Limit to 8k for embeddings
+            }
+          } catch (err) {
+            console.warn(`Failed to fetch content for ${filePath}:`, err);
+          }
+        })
+      );
+      
+      // Use semantic selector to identify key files
+      if (progressCallback) progressCallback('Analyzing files with semantic embeddings...');
+      const semanticSelector = new SemanticKeyFileSelector(openaiKey);
+      const semanticKeyFiles = await semanticSelector.rankFilesBySemanticImportance(
+        allFiles,
+        fileContentsMap,
+        (path, filename) => this.apiService.isTechnicalFile(path, filename)
+      );
+      
+      // Re-score folders with content analysis
+      const finalCandidateFolders = this.apiService.identifyKeyFolders(allFiles, fileContentsMap);
+      
+      // Enhance folders with semantic key files
+      const semanticFilePaths = new Set(semanticKeyFiles.map(f => f.path));
+      finalCandidateFolders.forEach(folder => {
+        // Prioritize semantic key files in each folder
+        const semanticFilesInFolder = folder.keyFiles.filter(f => semanticFilePaths.has(f));
+        const otherFiles = folder.keyFiles.filter(f => !semanticFilePaths.has(f));
+        folder.keyFiles = [...semanticFilesInFolder, ...otherFiles].slice(0, 2);
+      });
+      
       // Step 3: Prepare data for AI analysis
       const repoData = {
         name: `${owner}/${repo}`,
         description: repoInfo.description || '',
         readme: readme || '',
         languages: languages || {},
-        fileStructure: fileStructure,
+        fileStructure: allFiles,
         commits: commits || [],
         issues: issues || [],
         contributors: contributors || [],
@@ -147,7 +314,8 @@ class RepoAnalyzer {
         pushed_at: repoInfo.pushed_at || '',
         license: repoInfo.license?.name || 'None',
         topics: repoInfo.topics || [],
-        default_branch: repoInfo.default_branch || 'main'
+        default_branch: repoInfo.default_branch || 'main',
+        semanticKeyFiles: semanticKeyFiles.map(f => f.path)
       };
 
       // Step 4: Get AI analysis (all 6 features in one call)
@@ -155,6 +323,7 @@ class RepoAnalyzer {
       const aiAnalysis = await this.apiService.analyzeRepoWithAI(
         repoData, 
         openaiKey,
+        fileContentsMap,
         createRetryCallback('AI analysis')
       );
 
@@ -165,8 +334,9 @@ class RepoAnalyzer {
         // Feature 1: AI Repo Summary
         summary: aiAnalysis.summary || 'Unable to generate summary',
         
-        // Feature 2: Key File Highlighter
-        keyFiles: aiAnalysis.keyFiles || [],
+        // Feature 2: Key Files (semantic-based) + Key Folders
+        keyFiles: aiAnalysis.keyFiles || [], // Semantic key files (3-7 files)
+        keyFolders: aiAnalysis.keyFolders || [], // Folder-based organization
         
         // Feature 3: Architecture / Pipeline Explanation
         pipeline: aiAnalysis.pipeline || 'Unable to analyze architecture',
@@ -213,50 +383,18 @@ class RepoAnalyzer {
       return analysis;
     } catch (error) {
       console.error('Error analyzing repository:', error);
+      console.error('Error stack:', error.stack);
+      console.error('Error details:', {
+        message: error.message,
+        name: error.name,
+        owner: owner,
+        repo: repo
+      });
       throw error;
     }
   }
 
-  // Identify key files from repository structure
-  identifyKeyFiles(contents) {
-    if (!Array.isArray(contents)) {
-      return [];
-    }
-
-    const keyFilePatterns = [
-      /package\.json$/i,
-      /requirements\.txt$/i,
-      /pom\.xml$/i,
-      /build\.gradle$/i,
-      /Cargo\.toml$/i,
-      /go\.mod$/i,
-      /composer\.json$/i,
-      /Gemfile$/i,
-      /Dockerfile$/i,
-      /docker-compose\.yml$/i,
-      /\.env\.example$/i,
-      /\.env$/i,
-      /config\./i,
-      /setup\./i,
-      /install\./i,
-      /main\./i,
-      /index\./i,
-      /app\./i,
-      /server\./i,
-      /client\./i
-    ];
-
-    const importantFiles = contents
-      .filter(item => {
-        if (item.type === 'file') {
-          return keyFilePatterns.some(pattern => pattern.test(item.name));
-        }
-        return item.type === 'dir' && !item.name.startsWith('.');
-      })
-      .slice(0, 30); // Limit to top 30 files/dirs
-
-    return importantFiles;
-  }
+  // OLD identifyKeyFiles removed - now using identifyKeyFilesV2 in apiService
 
   // Quick health check without AI (fallback)
   calculateBasicHealth(repoInfo, commits, issues, contributors) {

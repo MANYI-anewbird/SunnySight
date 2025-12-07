@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "SunnySight - AI Repo Analyzer",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "AI-powered GitHub repository analyzer with technical insights and pain point detection",
   "permissions": [
     "activeTab",
@@ -35,18 +35,19 @@
     "128": "icons/icon128.png"
   },
   "options_page": "settings.html",
-  "web_accessible_resources": [
-    {
-      "resources": [
-        "architecture-ui.html",
-        "usecases-ui.html",
-        "dependencies-ui.html",
-        "styles.css",
-        "api.js",
-        "analyzer.js"
-      ],
-      "matches": ["<all_urls>"]
-    }
-  ]
+      "web_accessible_resources": [
+        {
+          "resources": [
+            "architecture-ui.html",
+            "usecases-ui.html",
+            "dependencies-ui.html",
+            "styles.css",
+            "api.js",
+            "SemanticKeyFileSelector.js",
+            "analyzer.js"
+          ],
+          "matches": ["<all_urls>"]
+        }
+      ]
 }
 

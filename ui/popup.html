@@ -156,6 +156,7 @@
 
       <div class="actions">
         <a id="repo-link" href="#" target="_blank" class="btn-primary">🔗 View on GitHub</a>
+        <button id="create-dashboard-btn" class="btn-dashboard">📊 Create Dynamic Dashboard</button>
         <button id="export-btn" class="btn-export">💾 Export JSON</button>
         <button id="copy-json-btn" class="btn-copy-json">📋 Copy JSON</button>
         <a href="https://sunnysett.com/github" target="_blank" class="btn-website">🌐 SunnySight</a>
@@ -229,9 +230,11 @@
     </div>
   </div>
 
-  <script src="api.js"></script>
-  <script src="SemanticKeyFileSelector.js"></script>
-  <script src="analyzer.js"></script>
+  <script src="../core/api.js"></script>
+  <script src="../utils/SemanticKeyFileSelector.js"></script>
+  <script src="../utils/deep-code-scanner.js"></script>
+  <script src="../core/analyzer.js"></script>
+  <script src="../dashboard/dashboard.js"></script>
   <script src="popup.js"></script>
 </body>
 </html>

@@ -63,6 +63,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
     }
 
+    // Dashboard button
+    const createDashboardBtn = document.getElementById('create-dashboard-btn');
+    if (createDashboardBtn) {
+      createDashboardBtn.addEventListener('click', createDynamicDashboard);
+    }
+
     // A2UI Navigation buttons
     const architectureBtn = document.getElementById('architecture-ui-btn');
     const useCasesBtn = document.getElementById('usecases-ui-btn');
@@ -292,6 +298,104 @@ document.addEventListener('DOMContentLoaded', async () => {
         html += '</div>';
         securityEl.innerHTML = html;
       }
+    }
+  }
+
+  async function createDynamicDashboard() {
+    if (!currentAnalysis || !currentOwner || !currentRepo) {
+      showToast('Please analyze a repository first');
+      return;
+    }
+
+    try {
+      // Show loading state in popup
+      const loadingEl = document.getElementById('loading');
+      const contentEl = document.getElementById('content');
+      const originalDisplay = contentEl.style.display;
+      
+      loadingEl.style.display = 'flex';
+      contentEl.style.display = 'none';
+      updateProgress('Generating dashboard...', 'This may take 10-30 seconds');
+      
+      // Load A2UI configuration from settings
+      await dashboardService.loadConfiguration();
+      
+      // Check API keys first
+      const { geminiKey, openaiKey } = await apiService.getAPIKeys();
+      if (!geminiKey && !openaiKey) {
+        // Show warning but still proceed
+        console.warn('⚠️ No API keys configured. Dashboard will use simple renderer.');
+        updateProgress('Generating dashboard...', 'Using simple renderer (no API keys)');
+      } else {
+        updateProgress('Calling AI API...', 'Generating dashboard UI');
+      }
+      
+      // Get dashboard URL from dashboard service (this generates the protocol)
+      const dashboardUrl = await dashboardService.createAndOpenDashboard(
+        currentAnalysis,
+        currentOwner,
+        currentRepo,
+        currentAnalysis.metadata || {},
+        {
+          customType: null, // Can be extended for custom UI types
+          customDescription: null
+        }
+      );
+
+      updateProgress('Opening dashboard...', 'Almost done');
+      
+      // Open dashboard in new tab
+      chrome.tabs.create({ url: dashboardUrl });
+      
+      // Restore popup
+      loadingEl.style.display = 'none';
+      contentEl.style.display = originalDisplay || 'block';
+      
+      showToast('Dashboard generated and opened!');
+    } catch (error) {
+      console.error('Dashboard generation error:', error);
+      console.error('Error stack:', error.stack);
+      
+      // Safely get error message
+      const errorMsg = error?.message || error?.toString() || 'Unknown error occurred';
+      let errorMessage = 'Failed to create dashboard: ' + errorMsg;
+      
+      // Provide helpful error messages (check safely)
+      if (errorMsg && typeof errorMsg === 'string') {
+        if (errorMsg.includes('quota') || errorMsg.includes('Quota')) {
+          errorMessage = 'API quota exceeded. Falling back to OpenAI...';
+          
+          // Check if OpenAI key is available
+          const { openaiKey } = await apiService.getAPIKeys();
+          if (!openaiKey) {
+            errorMessage = 'Gemini quota exceeded. Please configure OpenAI API key in settings as fallback.';
+            setTimeout(() => {
+              if (confirm('Gemini quota exceeded. Would you like to configure OpenAI API key?')) {
+                chrome.runtime.openOptionsPage();
+              }
+            }, 1000);
+          }
+        } else if (errorMsg.includes('API key') || errorMsg.includes('invalid') || errorMsg.includes('Invalid')) {
+          errorMessage = 'API key issue. Please check your API keys in settings are valid.';
+          setTimeout(() => {
+            if (confirm('API key issue detected. Open settings to verify?')) {
+              chrome.runtime.openOptionsPage();
+            }
+          }, 1000);
+        } else if (errorMsg.includes('parse') || errorMsg.includes('JSON')) {
+          errorMessage = 'Error parsing AI response. The API might be returning invalid data. Try again or check API keys.';
+        } else if (errorMsg.includes('Both APIs failed')) {
+          errorMessage = 'Both APIs failed. Please check your API keys are valid and have sufficient quota.';
+        }
+      }
+      
+      showToast(errorMessage);
+      
+      // Restore popup on error
+      const loadingEl = document.getElementById('loading');
+      const contentEl = document.getElementById('content');
+      if (loadingEl) loadingEl.style.display = 'none';
+      if (contentEl) contentEl.style.display = 'block';
     }
   }
 

@@ -4,15 +4,19 @@ document.addEventListener('DOMContentLoaded', async () => {
   const form = document.getElementById('settings-form');
   const openaiInput = document.getElementById('openai-key');
   const githubInput = document.getElementById('github-token');
+  const geminiInput = document.getElementById('gemini-key');
   const statusMessage = document.getElementById('status-message');
 
   // Load existing settings
-  chrome.storage.sync.get(['openaiKey', 'githubToken'], (result) => {
+  chrome.storage.sync.get(['openaiKey', 'githubToken', 'geminiKey'], (result) => {
     if (result.openaiKey) {
       openaiInput.value = result.openaiKey;
     }
     if (result.githubToken) {
       githubInput.value = result.githubToken;
+    }
+    if (result.geminiKey) {
+      geminiInput.value = result.geminiKey;
     }
   });
 
@@ -22,6 +26,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const openaiKey = openaiInput.value.trim();
     const githubToken = githubInput.value.trim();
+    const geminiKey = geminiInput.value.trim();
 
     // Validate OpenAI key
     if (!openaiKey) {
@@ -34,12 +39,19 @@ document.addEventListener('DOMContentLoaded', async () => {
       return;
     }
 
+    // Validate Gemini key format if provided
+    if (geminiKey && !geminiKey.startsWith('AIza')) {
+      showStatus('Invalid Gemini API key format (should start with AIza)', 'error');
+      return;
+    }
+
     // Save to storage
     try {
       await new Promise((resolve, reject) => {
         chrome.storage.sync.set({
           openaiKey: openaiKey,
-          githubToken: githubToken || null
+          githubToken: githubToken || null,
+          geminiKey: geminiKey || null
         }, () => {
           if (chrome.runtime.lastError) {
             reject(chrome.runtime.lastError);

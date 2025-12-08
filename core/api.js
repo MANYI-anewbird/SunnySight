@@ -9,10 +9,11 @@ class APIService {
   // Get API keys from storage
   async getAPIKeys() {
     return new Promise((resolve) => {
-      chrome.storage.sync.get(['githubToken', 'openaiKey'], (result) => {
+      chrome.storage.sync.get(['githubToken', 'openaiKey', 'geminiKey'], (result) => {
         resolve({
           githubToken: result.githubToken || null,
-          openaiKey: result.openaiKey || null
+          openaiKey: result.openaiKey || null,
+          geminiKey: result.geminiKey || null
         });
       });
     });

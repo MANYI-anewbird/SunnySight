@@ -15,7 +15,7 @@
     "https://api.openai.com/*"
   ],
   "action": {
-    "default_popup": "popup.html",
+    "default_popup": "ui/popup.html",
     "default_icon": {
       "16": "icons/icon16.png",
       "48": "icons/icon48.png",
@@ -25,7 +25,7 @@
   "content_scripts": [
     {
       "matches": ["https://github.com/*/*"],
-      "js": ["content.js"],
+      "js": ["core/content.js"],
       "run_at": "document_idle"
     }
   ],
@@ -34,17 +34,45 @@
     "48": "icons/icon48.png",
     "128": "icons/icon128.png"
   },
-  "options_page": "settings.html",
+  "options_page": "ui/settings.html",
       "web_accessible_resources": [
         {
           "resources": [
-            "architecture-ui.html",
-            "usecases-ui.html",
-            "dependencies-ui.html",
-            "styles.css",
-            "api.js",
-            "SemanticKeyFileSelector.js",
-            "analyzer.js"
+            "legacy/architecture-ui.html",
+            "legacy/usecases-ui.html",
+            "legacy/dependencies-ui.html",
+            "dashboard/dashboard.html",
+            "dashboard/dashboard.js",
+            "dashboard/dashboard-init.js",
+            "dashboard/dashboard-renderer.js",
+            "dashboard/dashboard-simple-renderer.js",
+            "dashboard/dashboard-view-switcher.js",
+            "dashboard/renderers/architecture-view-renderer.js",
+            "dashboard/renderers/security-review-renderer.js",
+            "dashboard/renderers/security-view-renderer.js",
+            "dashboard/renderers/pipeline-view-renderer.js",
+            "dashboard/renderers/overview-renderer.js",
+            "dashboard/renderers/enhanced-features-renderer.js",
+            "dashboard/renderers/pr-review-view-renderer.js",
+            "components/ModernDashboardRenderer.js",
+            "components/RepoSidebar.js",
+            "components/StartHereCard.js",
+            "components/TechStackRing.js",
+            "components/ArchitectureOrb3D.js",
+            "components/SystemMessageExplorer.js",
+            "components/AgentGraphPanel.js",
+            "components/CodeEditorPanel.js",
+            "components/RunRecipeCard.js",
+            "components/UseCasePanel.js",
+            "components/FolderStructureTree.js",
+            "components/AIMLWorkflowPanel.js",
+            "utils/deep-code-scanner.js",
+            "utils/graph-generator.js",
+            "utils/tailwind-utilities.css",
+            "ui/styles.css",
+            "core/api.js",
+            "utils/SemanticKeyFileSelector.js",
+            "core/analyzer.js"
           ],
           "matches": ["<all_urls>"]
         }
